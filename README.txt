@@ -1,8 +1,8 @@
-SHIPBUILDER WARMUP POC — BIG ARM CIRCLES
+SHIPBUILDER WARMUP POC
 
-This version uses the approved skeletal 3D motion. Start a local web server in
-this folder, then open it in a current version of Microsoft Edge, Google Chrome,
-Firefox, or Safari. For example:
+This version includes Big Arm Circles and Y to W Raise on a shared exercise
+selection screen. Start a local web server in this folder, then open it in a
+current version of Microsoft Edge, Google Chrome, Firefox, or Safari. For example:
 
   python3 -m http.server 8765 --bind 127.0.0.1
   http://127.0.0.1:8765/index.html
@@ -31,6 +31,15 @@ Repetition behavior
   reference: CC0 short dark-brown men's hair, warm skin, a blue athletic tee,
   navy shorts, and CC0 white athletic trainers with socks.
 
+Y to W Raise
+  The Y to W sequence follows the supplied Supervisor Ergo 5 PowerPoint: begin
+  with both arms in a high Y, lower both elbows toward the back pockets while
+  squeezing the shoulder blades into a W, then return to Y. One Y-W-Y cycle
+  counts as one repetition. The exercise calls for 10 repetitions, twice.
+  The controlled Y and W positions were cross-checked against the American
+  Council on Exercise I-Y-T-W exercise guidance:
+  https://www.acefitness.org/resources/everyone/exercise-library/237/shoulder-stability-mobility-series-i-y-t-w-formations/
+
 Verification check
   In a browser console, await window.__warmupPOC.verifyMotion() checks that both
   shoulders contain blended arm-to-torso skinning, joint lengths remain stable,
@@ -44,9 +53,12 @@ Keyboard shortcuts
   F       Enter full screen (when permitted by the browser)
 
 Files
-  index.html             Full Shipbuilder interface
-  app.js                 Exercise controls and 3D scene
-  model.js               Realistic model integration and approved motion
+  index.html             Exercise selection screen
+  big-arm-circles.html   Approved Big Arm Circles exercise
+  y-to-w-raise.html      Y to W Raise exercise
+  app.js / model.js      Approved Big Arm Circles controls and motion
+  y-to-w-app.js / y-to-w-model.js
+                         Y to W controls and motion
   assets/exercise-model.glb
                          Embedded rigged exercise figure
   assets/exercise-model-license.md
