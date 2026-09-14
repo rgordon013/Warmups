@@ -1,8 +1,8 @@
 SHIPBUILDER WARMUP POC
 
-This version includes Big Arm Circles and Y to W Raise on a shared exercise
-selection screen. Start a local web server in this folder, then open it in a
-current version of Microsoft Edge, Google Chrome, Firefox, or Safari. For example:
+This version includes Big Arm Circles, Y to W Raise, Squat, and Back Extension
+on a shared exercise selection screen. Start a local web server in this folder,
+then open it in a current browser. For example:
 
   python3 -m http.server 8765 --bind 127.0.0.1
   http://127.0.0.1:8765/index.html
@@ -40,6 +40,17 @@ Y to W Raise
   Council on Exercise I-Y-T-W exercise guidance:
   https://www.acefitness.org/resources/everyone/exercise-library/237/shoulder-stability-mobility-series-i-y-t-w-formations/
 
+Squat and Back Extension
+  These sequences follow the supplied Supervisor Ergo 5 PowerPoint. The squat
+  reaches the arms forward while the hips lower and the knees track with the
+  toes. The standing back extension keeps the hands at the hips, leans backward
+  through a gentle range, holds briefly, and returns to tall. Both call for 10
+  repetitions, twice.
+
+  Form references:
+  https://www.acefitness.org/resources/everyone/exercise-library/135/bodyweight-squat/
+  https://www2.gov.bc.ca/assets/gov/careers/all-employees/health-well-being-and-safety/safety/stretching_guide.pdf
+
 Verification check
   In a browser console, await window.__warmupPOC.verifyMotion() checks that both
   shoulders contain blended arm-to-torso skinning, joint lengths remain stable,
@@ -59,6 +70,10 @@ Files
   app.js / model.js      Approved Big Arm Circles controls and motion
   y-to-w-app.js / y-to-w-model.js
                          Y to W controls and motion
+  squat.html / squat-app.js / squat-model.js
+                         Squat exercise, controls, and motion
+  back-extension.html / back-extension-app.js / back-extension-model.js
+                         Back Extension exercise, controls, and motion
   assets/exercise-model.glb
                          Embedded rigged exercise figure
   assets/exercise-model-license.md
