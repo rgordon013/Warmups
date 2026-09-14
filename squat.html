@@ -33,7 +33,7 @@
         radial-gradient(circle at 50% 42%, rgba(34, 130, 163, .36), transparent 35%),
         linear-gradient(145deg, var(--navy-950), #0d304a 72%, #09243a);
     }
-    button { font: inherit; }
+    button, .home-button { font: inherit; }
 
     .app {
       height: 100dvh;
@@ -133,7 +133,10 @@
     .reverse-mode .direction::before { content: "↺"; }
 
     .controls { display: flex; flex-wrap: wrap; gap: 10px; }
-    button {
+    button, .home-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       min-height: 44px;
       padding: 9px 15px;
       border: 1px solid rgba(159, 231, 245, .38);
@@ -142,11 +145,12 @@
       color: var(--white);
       font-weight: 700;
       cursor: pointer;
+      text-decoration: none;
       transition: background .15s ease, border-color .15s ease, transform .15s ease;
     }
-    button:hover { background: #164765; border-color: rgba(159, 231, 245, .72); }
-    button:active { transform: translateY(1px); }
-    button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+    button:hover, .home-button:hover { background: #164765; border-color: rgba(159, 231, 245, .72); }
+    button:active, .home-button:active { transform: translateY(1px); }
+    button:focus-visible, .home-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
     .primary { min-width: 104px; border-color: var(--cyan-300); background: var(--blue-500); }
     .primary:hover { background: #1d8ddd; }
     .safety { max-width: 540px; color: var(--muted); font-size: clamp(.76rem, .92vw, .88rem); line-height: 1.35; text-align: right; }
@@ -214,6 +218,7 @@
 
     <footer>
       <div class="controls" aria-label="Exercise controls">
+        <a class="home-button" href="index.html">Home</a>
         <button class="primary" id="toggle" type="button">Start</button>
         <button id="reverse" type="button">Reverse</button>
         <button id="speed" type="button">Speed: 1×</button>
