@@ -334,11 +334,13 @@ export function createMannequin() {
 
       const rest = new Map(bones.map(bone => [bone, bone.quaternion.clone()]));
       character.updateMatrixWorld(true);
+      const spineRestWorldQuaternion = spine.getWorldQuaternion(new THREE.Quaternion());
       const restSegmentLengths = chains.map(chain => chain.slice(0, -1).map((bone, i) =>
         bone.getWorldPosition(new THREE.Vector3()).distanceTo(chain[i + 1].getWorldPosition(new THREE.Vector3()))
       ));
       rig = {
         character, byName, skinnedMeshes, bones, chains, lowerSpine, midSpine, spine, neck, rest,
+        spineRestWorldQuaternion,
         restSegmentLengths,
         shoulderBlendVertices: {
           left: countShoulderBlendVertices(skinnedMeshes, 'L'),
@@ -361,6 +363,8 @@ export function createMannequin() {
   const parentWorldQuaternion = new THREE.Quaternion();
   const localTarget = new THREE.Vector3();
   const alignment = new THREE.Quaternion();
+  const torsoWorldQuaternion = new THREE.Quaternion();
+  const torsoDirectionDelta = new THREE.Quaternion();
   const target = new THREE.Vector3();
 
   function aimChain(chain, worldTarget) {
@@ -416,6 +420,9 @@ export function createMannequin() {
       0
     );
     mesh.updateMatrixWorld(true);
+    rig.spine.getWorldQuaternion(torsoWorldQuaternion);
+    torsoDirectionDelta.copy(torsoWorldQuaternion)
+      .multiply(rig.spineRestWorldQuaternion.clone().invert());
 
     SIDES.forEach((side, index) => {
       const chain = rig.chains[index];
@@ -423,12 +430,12 @@ export function createMannequin() {
         side.sign * 0.70,
         -0.71,
         -0.08
-      ).normalize().clone();
+      ).normalize().applyQuaternion(torsoDirectionDelta).clone();
       const forearmDirection = new THREE.Vector3(
-        -side.sign * 0.60,
-        -0.79,
-        0.04
-      ).normalize();
+        -side.sign * 0.56,
+        -0.80,
+        0.20
+      ).normalize().applyQuaternion(torsoDirectionDelta);
       aimChainRange(chain, 0, 3, upperDirection);
       aimChainRange(chain, 3, chain.length - 1, forearmDirection);
     });
@@ -444,6 +451,8 @@ export function createMannequin() {
     let nonFiniteBoneValues = 0;
     let maxSegmentLengthError = 0;
     let maxLoopError = 0;
+    let minWristTorsoClearance = Infinity;
+    let minDistalArmTorsoClearance = Infinity;
 
     pose(0);
     const loopStart = rig.bones.map(bone => bone.quaternion.clone());
@@ -458,6 +467,15 @@ export function createMannequin() {
           chain[segmentIndex + 1].getWorldPosition(worldB);
           maxSegmentLengthError = Math.max(maxSegmentLengthError,
             Math.abs(worldA.distanceTo(worldB) - rig.restSegmentLengths[chainIndex][segmentIndex]));
+        });
+      });
+      rig.midSpine.getWorldPosition(worldA);
+      rig.chains.forEach(chain => {
+        chain.at(-1).getWorldPosition(worldB);
+        minWristTorsoClearance = Math.min(minWristTorsoClearance, Math.abs(worldB.x - worldA.x));
+        chain.slice(3).forEach(bone => {
+          bone.getWorldPosition(worldB);
+          minDistalArmTorsoClearance = Math.min(minDistalArmTorsoClearance, Math.abs(worldB.x - worldA.x));
         });
       });
     }
@@ -482,8 +500,13 @@ export function createMannequin() {
       nonFiniteBoneValues,
       maxSegmentLengthError,
       maxLoopError,
+      minWristTorsoClearance,
+      wristTorsoClearancePass: minWristTorsoClearance > 0.10,
+      minDistalArmTorsoClearance,
+      distalArmTorsoClearancePass: minDistalArmTorsoClearance > 0.10,
       pass: left > 0 && right > 0 && nonFiniteBoneValues === 0 &&
-        maxSegmentLengthError < 1e-5 && maxLoopError < 1e-8
+        maxSegmentLengthError < 1e-5 && maxLoopError < 1e-8 &&
+        minWristTorsoClearance > 0.10 && minDistalArmTorsoClearance > 0.10
     };
   }
 

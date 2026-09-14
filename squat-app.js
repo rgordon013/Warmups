@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import { createMannequin } from './squat-model.js';
+import { createMannequin } from './squat-model.js?v=body-clearance-3';
 
 const exercise = {
   id: 'squat',

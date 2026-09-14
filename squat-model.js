@@ -442,9 +442,9 @@ export function createMannequin() {
 
     SIDES.forEach((side, index) => {
       target.set(
-        side.sign * THREE.MathUtils.lerp(0.10, 0.11, blend),
-        THREE.MathUtils.lerp(-0.99, 0.05, blend),
-        THREE.MathUtils.lerp(0.02, 0.99, blend)
+        side.sign * THREE.MathUtils.lerp(0.42, 0.18, blend),
+        THREE.MathUtils.lerp(-0.90, 0.05, blend),
+        THREE.MathUtils.lerp(0.10, 0.98, blend)
       ).normalize();
       aimChain(rig.armChains[index], target);
 
@@ -469,6 +469,8 @@ export function createMannequin() {
     let nonFiniteBoneValues = 0;
     let maxSegmentLengthError = 0;
     let maxLoopError = 0;
+    let minWristTorsoClearance = Infinity;
+    let minDistalArmTorsoClearance = Infinity;
 
     pose(0);
     const loopStart = rig.bones.map(bone => bone.quaternion.clone());
@@ -483,6 +485,15 @@ export function createMannequin() {
           chain[segmentIndex + 1].getWorldPosition(worldB);
           maxSegmentLengthError = Math.max(maxSegmentLengthError,
             Math.abs(worldA.distanceTo(worldB) - rig.restSegmentLengths[chainIndex][segmentIndex]));
+        });
+      });
+      rig.spine.getWorldPosition(worldA);
+      rig.armChains.forEach(chain => {
+        chain.at(-1).getWorldPosition(worldB);
+        minWristTorsoClearance = Math.min(minWristTorsoClearance, Math.abs(worldB.x - worldA.x));
+        chain.slice(3).forEach(bone => {
+          bone.getWorldPosition(worldB);
+          minDistalArmTorsoClearance = Math.min(minDistalArmTorsoClearance, Math.abs(worldB.x - worldA.x));
         });
       });
     }
@@ -507,8 +518,13 @@ export function createMannequin() {
       nonFiniteBoneValues,
       maxSegmentLengthError,
       maxLoopError,
+      minWristTorsoClearance,
+      wristTorsoClearancePass: minWristTorsoClearance > 0.10,
+      minDistalArmTorsoClearance,
+      distalArmTorsoClearancePass: minDistalArmTorsoClearance > 0.10,
       pass: left > 0 && right > 0 && nonFiniteBoneValues === 0 &&
-        maxSegmentLengthError < 1e-5 && maxLoopError < 1e-8
+        maxSegmentLengthError < 1e-5 && maxLoopError < 1e-8 &&
+        minWristTorsoClearance > 0.10 && minDistalArmTorsoClearance > 0.10
     };
   }
 
