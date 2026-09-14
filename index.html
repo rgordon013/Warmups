@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#061525">
   <title>Shipbuilder Warmup — Exercise Selection</title>
+  <link rel="stylesheet" href="exercise-settings.css?v=1">
   <style>
     :root {
       color-scheme: dark;
@@ -39,17 +40,24 @@
       border: 1px solid var(--line);
       border-radius: 22px;
       background: rgba(8, 34, 54, .9);
-      color: var(--white);
-      text-decoration: none;
       box-shadow: 0 20px 46px rgba(0, 0, 0, .2);
       transition: transform .18s ease, border-color .18s ease, background .18s ease;
     }
     .exercise:hover { transform: translateY(-4px); border-color: rgba(159, 231, 245, .72); background: rgba(13, 53, 80, .95); }
-    .exercise:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+    .exercise-title { color: var(--white); text-decoration: none; }
+    .exercise-title:hover { color: var(--cyan-300); }
+    .exercise-title:focus-visible, .open-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
     .number { color: var(--gold); font-size: .8rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
     h2 { margin: 18px 0 10px; font-size: clamp(1.65rem, 3vw, 2.45rem); }
     .exercise p { max-width: 430px; margin: 0; color: var(--muted); line-height: 1.5; }
-    .meta { margin-top: auto; padding-top: 28px; color: var(--cyan-300); font-weight: 750; }
+    .meta { margin-top: auto; padding-top: 24px; color: var(--cyan-300); font-weight: 750; }
+    .card-settings { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 13px; }
+    .open-button {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 48px;
+      margin-left: auto; padding: 8px 16px; border-radius: 10px; background: var(--gold);
+      color: #071a2d; font-weight: 850; text-decoration: none;
+    }
+    .open-button:hover { background: #ffd77b; }
     footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
     @media (max-width: 700px) {
       .exercises { grid-template-columns: 1fr; }
@@ -65,33 +73,54 @@
     <p class="intro">Choose a guided movement. Each exercise includes a three-dimensional demonstration, coaching cues, and repetition tracking.</p>
 
     <section class="exercises" aria-label="Available exercises">
-      <a class="exercise" href="big-arm-circles.html">
+      <article class="exercise" data-exercise-id="big-arm-circles">
         <span class="number">Exercise 01</span>
-        <h2>Big Arm Circles</h2>
+        <h2><a class="exercise-title" href="big-arm-circles.html">Big Arm Circles</a></h2>
         <p>Alternating forward and backward arm circles with natural shoulder and torso movement.</p>
-        <span class="meta">10 repetitions each direction</span>
-      </a>
-      <a class="exercise" href="y-to-w-raise.html">
+        <span class="meta" data-target-summary>10 reps · 2 sets</span>
+        <div class="card-settings" aria-label="Big Arm Circles targets">
+          <label class="setting-field">Reps <select data-setting="reps" aria-label="Big Arm Circles target repetitions"></select></label>
+          <label class="setting-field">Sets <select data-setting="sets" aria-label="Big Arm Circles target sets"></select></label>
+          <a class="open-button" href="big-arm-circles.html">Open</a>
+        </div>
+      </article>
+      <article class="exercise" data-exercise-id="y-to-w-raise">
         <span class="number">Exercise 02</span>
-        <h2>Y to W Raise</h2>
+        <h2><a class="exercise-title" href="y-to-w-raise.html">Y to W Raise</a></h2>
         <p>Lower from a high Y into a controlled W while drawing the shoulder blades down and together.</p>
-        <span class="meta">10 repetitions · 2 sets</span>
-      </a>
-      <a class="exercise" href="squat.html">
+        <span class="meta" data-target-summary>10 reps · 2 sets</span>
+        <div class="card-settings" aria-label="Y to W Raise targets">
+          <label class="setting-field">Reps <select data-setting="reps" aria-label="Y to W Raise target repetitions"></select></label>
+          <label class="setting-field">Sets <select data-setting="sets" aria-label="Y to W Raise target sets"></select></label>
+          <a class="open-button" href="y-to-w-raise.html">Open</a>
+        </div>
+      </article>
+      <article class="exercise" data-exercise-id="squat">
         <span class="number">Exercise 03</span>
-        <h2>Squat</h2>
+        <h2><a class="exercise-title" href="squat.html">Squat</a></h2>
         <p>Reach forward while lowering the hips, keeping the back straight and knees aligned with the toes.</p>
-        <span class="meta">10 repetitions · 2 sets</span>
-      </a>
-      <a class="exercise" href="back-extension.html">
+        <span class="meta" data-target-summary>10 reps · 2 sets</span>
+        <div class="card-settings" aria-label="Squat targets">
+          <label class="setting-field">Reps <select data-setting="reps" aria-label="Squat target repetitions"></select></label>
+          <label class="setting-field">Sets <select data-setting="sets" aria-label="Squat target sets"></select></label>
+          <a class="open-button" href="squat.html">Open</a>
+        </div>
+      </article>
+      <article class="exercise" data-exercise-id="back-extension">
         <span class="number">Exercise 04</span>
-        <h2>Back Extension</h2>
+        <h2><a class="exercise-title" href="back-extension.html">Back Extension</a></h2>
         <p>Support the hips and lean backward slowly through a comfortable range before returning to tall.</p>
-        <span class="meta">10 repetitions · 2 sets</span>
-      </a>
+        <span class="meta" data-target-summary>10 reps · 2 sets</span>
+        <div class="card-settings" aria-label="Back Extension targets">
+          <label class="setting-field">Reps <select data-setting="reps" aria-label="Back Extension target repetitions"></select></label>
+          <label class="setting-field">Sets <select data-setting="sets" aria-label="Back Extension target sets"></select></label>
+          <a class="open-button" href="back-extension.html">Open</a>
+        </div>
+      </article>
     </section>
 
     <footer>Use a comfortable range. Stop for pain, dizziness, or unusual discomfort.</footer>
   </main>
+  <script type="module" src="home-settings.js?v=1"></script>
 </body>
 </html>

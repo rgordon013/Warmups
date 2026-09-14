@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import { createMannequin } from './squat-model.js?v=body-clearance-3';
+import { createExerciseProgress } from './exercise-progress.js';
 
 const exercise = {
   id: 'squat',
@@ -19,6 +20,7 @@ const app = document.getElementById('app');
 const stage = document.getElementById('stage');
 const threeStage = document.getElementById('three-stage');
 const count = document.getElementById('count');
+const progressLabel = document.getElementById('progress-label');
 const directionLabel = document.getElementById('direction');
 const status = document.getElementById('status');
 const announcement = document.getElementById('announcement');
@@ -26,9 +28,10 @@ const toggle = document.getElementById('toggle');
 const reverse = document.getElementById('reverse');
 const speed = document.getElementById('speed');
 const reset = document.getElementById('reset');
+const targetReps = document.getElementById('target-reps');
+const targetSets = document.getElementById('target-sets');
 
 document.getElementById('exercise-title').textContent = exercise.title;
-document.getElementById('rep-guidance').textContent = `${exercise.repsPerDirection} repetitions · 2 sets`;
 document.getElementById('safety-message').textContent = exercise.safety;
 document.getElementById('cue-list').innerHTML = exercise.cues.map((cue, index) =>
   `<div class="cue"><span class="num">${index + 1}</span><span>${cue}</span></div>`
@@ -99,14 +102,17 @@ model.ready.then(() => draw()).catch(error => {
 const speeds = exercise.speeds;
 const baseSecondsPerRep = exercise.secondsPerRep;
 let speedIndex = 1;
-let started = false;
-let running = false;
 let direction = 1;
 const pageParameters = new URLSearchParams(window.location.search);
 let phase = pageParameters.has('phase') ? Number(pageParameters.get('phase')) * Math.PI / 180 || 0 : 0;
 let distanceSinceRep = 0;
-let reps = 0;
 let lastTime = performance.now();
+const progress = createExerciseProgress({
+  exerciseId: exercise.id, app, count, progressLabel, status, announcement, toggle,
+  resetButton: reset, repsSelect: targetReps, setsSelect: targetSets,
+  onReset: () => { distanceSinceRep = 0; },
+  onRunningChange: () => { lastTime = performance.now(); }
+});
 
 function draw() {
   model.pose(phase);
@@ -123,19 +129,6 @@ function resizeRenderer() {
   draw();
 }
 
-function setRunning(next) {
-  if (!started) {
-    started = true;
-    app.classList.add('has-started');
-  }
-  running = next;
-  toggle.textContent = running ? 'Pause' : 'Resume';
-  status.textContent = running ? 'Exercise in progress' : 'Paused';
-  announcement.textContent = running ? 'Exercise started' : 'Exercise paused';
-  lastTime = performance.now();
-}
-
-toggle.addEventListener('click', () => setRunning(!running));
 reverse.addEventListener('click', () => {
   direction *= -1;
   distanceSinceRep = 0;
@@ -149,13 +142,6 @@ speed.addEventListener('click', () => {
   speed.textContent = `Speed: ${speeds[speedIndex]}×`;
   announcement.textContent = `Speed ${speeds[speedIndex]} times`;
 });
-reset.addEventListener('click', () => {
-  reps = 0;
-  distanceSinceRep = 0;
-  count.textContent = '0';
-  announcement.textContent = 'Repetition count reset';
-});
-
 document.addEventListener('keydown', event => {
   if (event.code === 'Space') { event.preventDefault(); toggle.click(); }
   else if (event.key.toLowerCase() === 'r') reverse.click();
@@ -188,7 +174,7 @@ async function verifyMotion() {
 
 window.__warmupPOC = {
   exercise,
-  state: () => ({ started, running, direction, speed: speeds[speedIndex], reps, phase, distanceSinceRep }),
+  state: () => ({ ...progress.state(), direction, speed: speeds[speedIndex], phase, distanceSinceRep }),
   setPhase: degrees => { phase = Number(degrees) * Math.PI / 180 || 0; draw(); },
   verifyMotion
 };
@@ -215,16 +201,14 @@ if (pageParameters.has('verify')) {
 function renderTime(now) {
   const delta = Math.min((now - lastTime) / 1000, 0.08);
   lastTime = now;
-  if (running) {
+  if (progress.running) {
     const radiansPerSecond = Math.PI * 2 / (baseSecondsPerRep / speeds[speedIndex]);
     const travel = radiansPerSecond * delta;
     phase += travel * direction;
     distanceSinceRep += travel;
     while (distanceSinceRep >= Math.PI * 2) {
       distanceSinceRep -= Math.PI * 2;
-      reps += 1;
-      count.textContent = reps;
-      announcement.textContent = `Repetition ${reps} complete`;
+      progress.recordRep();
     }
   }
   draw();

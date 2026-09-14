@@ -1,0 +1,36 @@
+.workout-settings {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+.setting-field {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px 7px 11px;
+  border: 1px solid rgba(159, 231, 245, .4);
+  border-radius: 999px;
+  color: #9fe7f5;
+  font-size: clamp(.76rem, .92vw, .9rem);
+  font-weight: 750;
+  white-space: nowrap;
+}
+.setting-field select {
+  min-width: 52px;
+  min-height: 34px;
+  padding: 3px 22px 3px 8px;
+  border: 1px solid rgba(159, 231, 245, .38);
+  border-radius: 8px;
+  background: #0e3049;
+  color: #f8fbff;
+  font: inherit;
+  cursor: pointer;
+}
+.setting-field select:focus-visible { outline: 3px solid #ffc857; outline-offset: 2px; }
+@media (max-width: 720px) {
+  .workout-settings { gap: 6px; }
+  .setting-field { grid-template-columns: 1fr; gap: 2px; padding: 6px 8px; border-radius: 12px; text-align: center; }
+  .setting-field select { min-width: 58px; }
+}
