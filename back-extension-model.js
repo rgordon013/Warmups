@@ -273,6 +273,17 @@ function armChain(byName, suffix) {
   ].map(name => byName.get(name));
 }
 
+function legChain(byName, suffix) {
+  return [
+    `scoutpelvis${suffix}`,
+    `scoutupperleg01${suffix}`,
+    `scoutupperleg02${suffix}`,
+    `scoutlowerleg01${suffix}`,
+    `scoutlowerleg02${suffix}`,
+    `scoutfoot${suffix}`
+  ].map(name => byName.get(name));
+}
+
 function countShoulderBlendVertices(skinnedMeshes, suffix) {
   const armPattern = new RegExp(`(?:shoulder|upperarm|lowerarm).*${suffix}$`, 'i');
   const torsoPattern = /(?:clavicle|spine|neck)/i;
@@ -298,7 +309,7 @@ function countShoulderBlendVertices(skinnedMeshes, suffix) {
   return count;
 }
 
-export function createMannequin() {
+export function createMannequin(exerciseId = 'back-extension') {
   const mesh = new THREE.Group();
   mesh.name = 'realistic exercise model';
   let rig = null;
@@ -321,12 +332,14 @@ export function createMannequin() {
       });
 
       const chains = SIDES.map(side => armChain(byName, side.suffix));
+      const legChains = SIDES.map(side => legChain(byName, side.suffix));
+      const root = byName.get('scoutroot');
       const lowerSpine = byName.get('scoutspine05');
       const midSpine = byName.get('scoutspine04');
       const spine = byName.get('scoutspine03');
       const neck = byName.get('scoutneck01');
       const head = byName.get('scouthead');
-      const required = [...chains.flat(), lowerSpine, midSpine, spine, neck, head];
+      const required = [...chains.flat(), ...legChains.flat(), root, lowerSpine, midSpine, spine, neck, head];
       if (required.some(item => !item)) throw new Error('The exercise model is missing required shoulder or torso joints.');
       convertOvershirtToAthleticTee(byName.get('overshirt'));
       convertTrousersToAthleticShorts(byName.get('trousers'));
@@ -335,11 +348,13 @@ export function createMannequin() {
       const rest = new Map(bones.map(bone => [bone, bone.quaternion.clone()]));
       character.updateMatrixWorld(true);
       const spineRestWorldQuaternion = spine.getWorldQuaternion(new THREE.Quaternion());
-      const restSegmentLengths = chains.map(chain => chain.slice(0, -1).map((bone, i) =>
+      const motionChains = [...chains, ...legChains];
+      const restSegmentLengths = motionChains.map(chain => chain.slice(0, -1).map((bone, i) =>
         bone.getWorldPosition(new THREE.Vector3()).distanceTo(chain[i + 1].getWorldPosition(new THREE.Vector3()))
       ));
       rig = {
-        character, byName, skinnedMeshes, bones, chains, lowerSpine, midSpine, spine, neck, rest,
+        character, byName, skinnedMeshes, bones, chains: motionChains, armChains: chains, legChains,
+        root, rootRestPosition: root.position.clone(), lowerSpine, midSpine, spine, neck, rest,
         spineRestWorldQuaternion,
         restSegmentLengths,
         shoulderBlendVertices: {
@@ -399,43 +414,66 @@ export function createMannequin() {
     lastPhase = phase;
     if (!rig) return;
     rig.bones.forEach(bone => bone.quaternion.copy(rig.rest.get(bone)));
+    rig.root.position.copy(rig.rootRestPosition);
 
-    // One full phase moves into a gentle supported extension and back to tall.
     const cycle = THREE.MathUtils.euclideanModulo(phase, Math.PI * 2) / (Math.PI * 2);
-    const blend = cycle < 0.35
-      ? THREE.MathUtils.smoothstep(cycle / 0.35, 0, 1)
-      : cycle <= 0.65
-        ? 1
-        : 1 - THREE.MathUtils.smoothstep((cycle - 0.65) / 0.35, 0, 1);
-    rig.lowerSpine.rotation.set(-0.11 * blend, 0, 0);
-    rig.midSpine.rotation.set(-0.07 * blend, 0, 0);
-    rig.spine.rotation.set(
-      -0.04 * blend,
-      0,
-      0
-    );
-    rig.neck.rotation.set(
-      0.04 * blend,
-      0,
-      0
-    );
+    const pulse = (1 - Math.cos(phase)) * 0.5;
+    let upperForSide;
+    let forearmForSide;
+
+    if (exerciseId === 'active-chest-stretch') {
+      const open = 0.30 + 0.70 * pulse;
+      rig.spine.rotation.set(-0.035 * open, 0, 0);
+      upperForSide = side => new THREE.Vector3(side.sign * 0.76, 0.42, -0.18 - 0.30 * open);
+      forearmForSide = side => new THREE.Vector3(-side.sign * 0.80, 0.14, -0.58);
+    } else if (exerciseId === 'high-knees') {
+      const leftLift = Math.max(0, Math.sin(phase));
+      const rightLift = Math.max(0, -Math.sin(phase));
+      [leftLift, rightLift].forEach((lift, index) => {
+        const leg = rig.legChains[index];
+        leg[1].rotateX(-1.05 * lift);
+        leg[2].rotateX(-0.95 * lift);
+        leg[3].rotateX(0.90 * lift);
+        leg[4].rotateX(0.80 * lift);
+      });
+      upperForSide = side => new THREE.Vector3(side.sign * 0.38, -0.91, 0.12);
+      forearmForSide = side => new THREE.Vector3(side.sign * 0.30, -0.94, 0.14);
+    } else if (exerciseId === 'heel-raises') {
+      const rise = pulse * pulse * (3 - 2 * pulse);
+      rig.root.position.y = rig.rootRestPosition.y + 0.065 * rise;
+      rig.legChains.forEach(leg => leg.at(-1).rotateX(0.68 * rise));
+      upperForSide = side => new THREE.Vector3(side.sign * 0.30, -0.88, 0.36);
+      forearmForSide = side => new THREE.Vector3(side.sign * 0.20, -0.91, 0.40);
+    } else if (exerciseId === 'standing-trunk-rotation') {
+      const turn = Math.sin(phase) * 0.65;
+      rig.lowerSpine.rotation.set(0, turn * 0.28, 0);
+      rig.midSpine.rotation.set(0, turn * 0.34, 0);
+      rig.spine.rotation.set(0, turn * 0.38, 0);
+      rig.neck.rotation.set(0, -turn * 0.05, 0);
+      upperForSide = side => new THREE.Vector3(side.sign * 0.70, -0.71, -0.08);
+      forearmForSide = side => new THREE.Vector3(-side.sign * 0.34, -0.80, 0.48);
+    } else {
+      const blend = cycle < 0.35
+        ? THREE.MathUtils.smoothstep(cycle / 0.35, 0, 1)
+        : cycle <= 0.65
+          ? 1
+          : 1 - THREE.MathUtils.smoothstep((cycle - 0.65) / 0.35, 0, 1);
+      rig.lowerSpine.rotation.set(-0.11 * blend, 0, 0);
+      rig.midSpine.rotation.set(-0.07 * blend, 0, 0);
+      rig.spine.rotation.set(-0.04 * blend, 0, 0);
+      rig.neck.rotation.set(0.04 * blend, 0, 0);
+      upperForSide = side => new THREE.Vector3(side.sign * 0.70, -0.71, -0.08);
+      forearmForSide = side => new THREE.Vector3(-side.sign * 0.42, -0.80, 0.42);
+    }
     mesh.updateMatrixWorld(true);
     rig.spine.getWorldQuaternion(torsoWorldQuaternion);
     torsoDirectionDelta.copy(torsoWorldQuaternion)
       .multiply(rig.spineRestWorldQuaternion.clone().invert());
 
     SIDES.forEach((side, index) => {
-      const chain = rig.chains[index];
-      const upperDirection = target.set(
-        side.sign * 0.70,
-        -0.71,
-        -0.08
-      ).normalize().applyQuaternion(torsoDirectionDelta).clone();
-      const forearmDirection = new THREE.Vector3(
-        -side.sign * 0.56,
-        -0.80,
-        0.20
-      ).normalize().applyQuaternion(torsoDirectionDelta);
+      const chain = rig.armChains[index];
+      const upperDirection = upperForSide(side).normalize().applyQuaternion(torsoDirectionDelta);
+      const forearmDirection = forearmForSide(side).normalize().applyQuaternion(torsoDirectionDelta);
       aimChainRange(chain, 0, 3, upperDirection);
       aimChainRange(chain, 3, chain.length - 1, forearmDirection);
     });
@@ -453,6 +491,10 @@ export function createMannequin() {
     let maxLoopError = 0;
     let minWristTorsoClearance = Infinity;
     let minDistalArmTorsoClearance = Infinity;
+    let maxRootRise = 0;
+    let maxSpineTurn = 0;
+    const footBaseline = rig.legChains.map(chain => chain.at(-1).getWorldPosition(new THREE.Vector3()).y);
+    const maxFootRise = [0, 0];
 
     pose(0);
     const loopStart = rig.bones.map(bone => bone.quaternion.clone());
@@ -460,6 +502,13 @@ export function createMannequin() {
       pose(frame / 72 * Math.PI * 2);
       rig.bones.forEach(bone => {
         for (const value of bone.matrixWorld.elements) if (!Number.isFinite(value)) nonFiniteBoneValues++;
+      });
+      maxRootRise = Math.max(maxRootRise, rig.root.position.y - rig.rootRestPosition.y);
+      maxSpineTurn = Math.max(maxSpineTurn,
+        Math.abs(rig.lowerSpine.rotation.y) + Math.abs(rig.midSpine.rotation.y) + Math.abs(rig.spine.rotation.y));
+      rig.legChains.forEach((chain, index) => {
+        chain.at(-1).getWorldPosition(worldB);
+        maxFootRise[index] = Math.max(maxFootRise[index], worldB.y - footBaseline[index]);
       });
       rig.chains.forEach((chain, chainIndex) => {
         chain.slice(0, -1).forEach((bone, segmentIndex) => {
@@ -470,7 +519,7 @@ export function createMannequin() {
         });
       });
       rig.midSpine.getWorldPosition(worldA);
-      rig.chains.forEach(chain => {
+      rig.armChains.forEach(chain => {
         chain.at(-1).getWorldPosition(worldB);
         minWristTorsoClearance = Math.min(minWristTorsoClearance, Math.abs(worldB.x - worldA.x));
         chain.slice(3).forEach(bone => {
@@ -488,6 +537,13 @@ export function createMannequin() {
     const triangles = rig.skinnedMeshes.reduce((sum, item) => sum +
       (item.geometry.index ? item.geometry.index.count / 3 : item.geometry.attributes.position.count / 3), 0);
     const { left, right } = rig.shoulderBlendVertices;
+    const exerciseMotionPass = exerciseId === 'high-knees'
+      ? maxFootRise.every(value => value > 0.16)
+      : exerciseId === 'heel-raises'
+        ? maxRootRise > 0.05
+        : exerciseId === 'standing-trunk-rotation'
+          ? maxSpineTurn > 0.50
+          : true;
     return {
       ready: true,
       model: 'rigged realistic exercise athlete',
@@ -504,9 +560,12 @@ export function createMannequin() {
       wristTorsoClearancePass: minWristTorsoClearance > 0.10,
       minDistalArmTorsoClearance,
       distalArmTorsoClearancePass: minDistalArmTorsoClearance > 0.10,
+      exerciseId,
+      exerciseMotion: { maxRootRise, maxSpineTurn, maxFootRise },
+      exerciseMotionPass,
       pass: left > 0 && right > 0 && nonFiniteBoneValues === 0 &&
         maxSegmentLengthError < 1e-5 && maxLoopError < 1e-8 &&
-        minWristTorsoClearance > 0.10 && minDistalArmTorsoClearance > 0.10
+        minWristTorsoClearance > 0.10 && minDistalArmTorsoClearance > 0.10 && exerciseMotionPass
     };
   }
 

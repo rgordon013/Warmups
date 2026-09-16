@@ -4,7 +4,11 @@ export const EXERCISE_DEFAULTS = Object.freeze({
   'big-arm-circles': Object.freeze({ reps: 10, sets: 2 }),
   'y-to-w-raise': Object.freeze({ reps: 10, sets: 2 }),
   squat: Object.freeze({ reps: 10, sets: 2 }),
-  'back-extension': Object.freeze({ reps: 10, sets: 2 })
+  'back-extension': Object.freeze({ reps: 10, sets: 2 }),
+  'active-chest-stretch': Object.freeze({ reps: 10, sets: 2 }),
+  'high-knees': Object.freeze({ reps: 10, sets: 2 }),
+  'heel-raises': Object.freeze({ reps: 10, sets: 2 }),
+  'standing-trunk-rotation': Object.freeze({ reps: 10, sets: 1 })
 });
 
 const LIMITS = Object.freeze({ reps: [1, 50], sets: [1, 10] });

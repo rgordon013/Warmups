@@ -1,20 +1,12 @@
 import * as THREE from './vendor/three.module.js';
-import { createMannequin } from './back-extension-model.js?v=body-clearance-5';
-import { createExerciseProgress } from './exercise-progress.js';
+import { createMannequin } from './back-extension-model.js?v=slide-two-7';
+import { createExerciseProgress } from './exercise-progress.js?v=2';
+import { ADDITIONAL_EXERCISES } from './additional-exercises.js';
 
-const exercise = {
-  id: 'back-extension',
-  title: 'Back Extension',
-  repsPerDirection: 10,
-  secondsPerRep: 4,
-  speeds: [0.6, 1, 1.4],
-  cues: [
-    'Stand with your feet shoulder-width apart and place your hands on your hips.',
-    'Lean backward slowly through a comfortable, controlled range.',
-    'Hold briefly, then return to the starting position.'
-  ],
-  safety: 'Use a comfortable range. Stop for pain, dizziness, or unusual discomfort.'
-};
+const pageParameters = new URLSearchParams(window.location.search);
+const exercise = ADDITIONAL_EXERCISES[pageParameters.get('exercise')] || ADDITIONAL_EXERCISES['active-chest-stretch'];
+const speeds = [0.6, 1, 1.4];
+const safety = 'Use a comfortable range. Stop for pain, dizziness, or unusual discomfort.';
 
 const app = document.getElementById('app');
 const stage = document.getElementById('stage');
@@ -31,11 +23,14 @@ const reset = document.getElementById('reset');
 const targetReps = document.getElementById('target-reps');
 const targetSets = document.getElementById('target-sets');
 
+document.title = `Shipbuilder Warmup — ${exercise.title}`;
 document.getElementById('exercise-title').textContent = exercise.title;
-document.getElementById('safety-message').textContent = exercise.safety;
+document.getElementById('safety-message').textContent = safety;
 document.getElementById('cue-list').innerHTML = exercise.cues.map((cue, index) =>
   `<div class="cue"><span class="num">${index + 1}</span><span>${cue}</span></div>`
 ).join('');
+threeStage.setAttribute('aria-label', exercise.ariaLabel);
+directionLabel.textContent = exercise.direction;
 
 let renderer;
 try {
@@ -89,7 +84,7 @@ platform.position.y = 0.008;
 platform.receiveShadow = true;
 scene.add(platform);
 
-const model = createMannequin();
+const model = createMannequin(exercise.id);
 scene.add(model.mesh);
 model.ready.then(() => draw()).catch(error => {
   const message = document.createElement('p');
@@ -99,11 +94,8 @@ model.ready.then(() => draw()).catch(error => {
   console.error(error);
 });
 
-const speeds = exercise.speeds;
-const baseSecondsPerRep = exercise.secondsPerRep;
 let speedIndex = 1;
 let direction = 1;
-const pageParameters = new URLSearchParams(window.location.search);
 let phase = pageParameters.has('phase') ? Number(pageParameters.get('phase')) * Math.PI / 180 || 0 : 0;
 let distanceSinceRep = 0;
 let lastTime = performance.now();
@@ -132,16 +124,17 @@ function resizeRenderer() {
 reverse.addEventListener('click', () => {
   direction *= -1;
   distanceSinceRep = 0;
-  const isForward = direction === 1;
-  app.classList.toggle('reverse-mode', !isForward);
-  directionLabel.textContent = isForward ? 'Extend and return' : 'Return and extend';
-  announcement.textContent = isForward ? 'Extend and return direction selected' : 'Return and extend direction selected';
+  const forward = direction === 1;
+  app.classList.toggle('reverse-mode', !forward);
+  directionLabel.textContent = forward ? exercise.direction : exercise.reverseDirection;
+  announcement.textContent = `${directionLabel.textContent} selected`;
 });
 speed.addEventListener('click', () => {
   speedIndex = (speedIndex + 1) % speeds.length;
   speed.textContent = `Speed: ${speeds[speedIndex]}×`;
   announcement.textContent = `Speed ${speeds[speedIndex]} times`;
 });
+
 document.addEventListener('keydown', event => {
   if (event.code === 'Space') { event.preventDefault(); toggle.click(); }
   else if (event.key.toLowerCase() === 'r') reverse.click();
@@ -179,8 +172,6 @@ window.__warmupPOC = {
   verifyMotion
 };
 
-// Opt-in browser diagnostic used during packaging; normal exercise loads do
-// not pay the cost of sampling every vertex through the complete motion.
 if (pageParameters.has('verify')) {
   const verificationOutput = document.createElement('output');
   verificationOutput.id = 'motion-verification';
@@ -202,7 +193,7 @@ function renderTime(now) {
   const delta = Math.min((now - lastTime) / 1000, 0.08);
   lastTime = now;
   if (progress.running) {
-    const radiansPerSecond = Math.PI * 2 / (baseSecondsPerRep / speeds[speedIndex]);
+    const radiansPerSecond = Math.PI * 2 / (exercise.secondsPerRep / speeds[speedIndex]);
     const travel = radiansPerSecond * delta;
     phase += travel * direction;
     distanceSinceRep += travel;

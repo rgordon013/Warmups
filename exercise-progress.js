@@ -1,4 +1,4 @@
-import { bindSettingsControls, formatTarget } from './exercise-settings.js';
+import { bindSettingsControls, formatTarget } from './exercise-settings.js?v=2';
 
 export function createExerciseProgress({
   exerciseId,
