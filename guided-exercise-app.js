@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
-import { createMannequin } from './back-extension-model.js?v=slide-two-7';
+import { createMannequin } from './back-extension-model.js?v=slide3-6';
 import { createExerciseProgress } from './exercise-progress.js?v=2';
+import { createTimedHoldProgress } from './timed-hold-progress.js?v=1';
 import { ADDITIONAL_EXERCISES } from './additional-exercises.js';
 
 const pageParameters = new URLSearchParams(window.location.search);
@@ -31,6 +32,12 @@ document.getElementById('cue-list').innerHTML = exercise.cues.map((cue, index) =
 ).join('');
 threeStage.setAttribute('aria-label', exercise.ariaLabel);
 directionLabel.textContent = exercise.direction;
+if (exercise.timed) {
+  targetReps.closest('label').firstChild.textContent = 'Seconds ';
+  targetReps.setAttribute('aria-label', 'Hold duration in seconds');
+  reverse.hidden = true;
+  speed.hidden = true;
+}
 
 let renderer;
 try {
@@ -99,9 +106,10 @@ let direction = 1;
 let phase = pageParameters.has('phase') ? Number(pageParameters.get('phase')) * Math.PI / 180 || 0 : 0;
 let distanceSinceRep = 0;
 let lastTime = performance.now();
-const progress = createExerciseProgress({
+const progress = (exercise.timed ? createTimedHoldProgress : createExerciseProgress)({
   exerciseId: exercise.id, app, count, progressLabel, status, announcement, toggle,
   resetButton: reset, repsSelect: targetReps, setsSelect: targetSets,
+  onSideChange: side => model.setSide(side),
   onReset: () => { distanceSinceRep = 0; },
   onRunningChange: () => { lastTime = performance.now(); }
 });
@@ -172,6 +180,14 @@ window.__warmupPOC = {
   verifyMotion
 };
 
+if (pageParameters.has('markers')) {
+  const markers = document.createElement('output');
+  markers.id = 'pose-markers';
+  markers.hidden = true;
+  document.body.append(markers);
+  model.ready.then(() => { model.pose(phase); markers.textContent = JSON.stringify(model.inspectPose()); });
+}
+
 if (pageParameters.has('verify')) {
   const verificationOutput = document.createElement('output');
   verificationOutput.id = 'motion-verification';
@@ -192,7 +208,9 @@ if (pageParameters.has('verify')) {
 function renderTime(now) {
   const delta = Math.min((now - lastTime) / 1000, 0.08);
   lastTime = now;
-  if (progress.running) {
+  if (progress.running && exercise.timed) {
+    progress.tick(delta);
+  } else if (progress.running) {
     const radiansPerSecond = Math.PI * 2 / (exercise.secondsPerRep / speeds[speedIndex]);
     const travel = radiansPerSecond * delta;
     phase += travel * direction;

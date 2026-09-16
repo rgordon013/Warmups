@@ -8,7 +8,11 @@ export const EXERCISE_DEFAULTS = Object.freeze({
   'active-chest-stretch': Object.freeze({ reps: 10, sets: 2 }),
   'high-knees': Object.freeze({ reps: 10, sets: 2 }),
   'heel-raises': Object.freeze({ reps: 10, sets: 2 }),
-  'standing-trunk-rotation': Object.freeze({ reps: 10, sets: 1 })
+  'standing-trunk-rotation': Object.freeze({ reps: 10, sets: 1 }),
+  'neck-retraction': Object.freeze({ reps: 10, sets: 2 }),
+  'chin-to-chest-neck-stretch': Object.freeze({ reps: 20, sets: 2 }),
+  'wrist-extensor-stretch': Object.freeze({ reps: 20, sets: 2 }),
+  'wrist-flexor-stretch': Object.freeze({ reps: 20, sets: 2 })
 });
 
 const LIMITS = Object.freeze({ reps: [1, 50], sets: [1, 10] });
@@ -59,9 +63,12 @@ function populateSelect(select, [minimum, maximum]) {
   }
 }
 
-export function formatTarget(settings) {
+export function formatTarget(settings, exerciseId) {
   const repWord = settings.reps === 1 ? 'rep' : 'reps';
   const setWord = settings.sets === 1 ? 'set' : 'sets';
+  if (['chin-to-chest-neck-stretch', 'wrist-extensor-stretch', 'wrist-flexor-stretch'].includes(exerciseId)) {
+    return `${settings.reps}-second hold · ${settings.sets} ${setWord} per side`;
+  }
   return `${settings.reps} ${repWord} · ${settings.sets} ${setWord}`;
 }
 

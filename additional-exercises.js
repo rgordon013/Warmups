@@ -54,5 +54,33 @@ export const ADDITIONAL_EXERCISES = Object.freeze({
       'Keep your hands supported at your hips.',
       'Rotate from side to side while your feet and hips face forward.'
     ]
+  }),
+  'neck-retraction': Object.freeze({
+    id: 'neck-retraction', title: 'Neck Retraction', secondsPerRep: 4,
+    direction: 'Draw chin straight back', reverseDirection: 'Draw chin straight back',
+    description: 'Draw the head straight back while keeping the eyes level.',
+    ariaLabel: 'Three-dimensional adult model demonstrating neck retraction',
+    cues: ['Stand tall and look straight ahead.', 'Draw your head straight backward without tilting it.', 'Hold briefly, then return to neutral.']
+  }),
+  'chin-to-chest-neck-stretch': Object.freeze({
+    id: 'chin-to-chest-neck-stretch', timed: true, title: 'Chin-to-Chest Neck Stretch',
+    direction: 'Gentle neck flexion', reverseDirection: 'Gentle neck flexion',
+    description: 'Lower the chin toward the chest in a comfortable range.',
+    ariaLabel: 'Three-dimensional adult model demonstrating a chin-to-chest neck stretch',
+    cues: ['Stand tall with your shoulders relaxed.', 'Lower your chin gently toward your chest; do not pull on your head.', 'Hold for the selected time, then return to neutral before changing sides.']
+  }),
+  'wrist-extensor-stretch': Object.freeze({
+    id: 'wrist-extensor-stretch', timed: true, title: 'Wrist Extensor Stretch',
+    direction: 'Palm down · fingers down', reverseDirection: 'Palm down · fingers down',
+    description: 'Extend one arm, palm down, and gently bend the wrist downward.',
+    ariaLabel: 'Three-dimensional adult model demonstrating a wrist extensor stretch',
+    cues: ['Extend one arm forward with the elbow straight and palm down.', 'Point the fingers toward the floor.', 'Use the other hand to gently draw the fingers toward you; hold, then switch sides.']
+  }),
+  'wrist-flexor-stretch': Object.freeze({
+    id: 'wrist-flexor-stretch', timed: true, title: 'Wrist Flexor Stretch',
+    direction: 'Palm up · fingers down', reverseDirection: 'Palm up · fingers down',
+    description: 'Extend one arm, palm up, and gently bend the wrist downward.',
+    ariaLabel: 'Three-dimensional adult model demonstrating a wrist flexor stretch',
+    cues: ['Extend one arm forward with the elbow straight and palm up.', 'Point the fingers toward the floor.', 'Use the other hand to gently draw the fingers toward you; hold, then switch sides.']
   })
 });
