@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.js';
-import { createMannequin } from './back-extension-model.js?v=slide3-6';
+import { createMannequin } from './back-extension-model.js?v=slide4-4';
 import { createExerciseProgress } from './exercise-progress.js?v=2';
-import { createTimedHoldProgress } from './timed-hold-progress.js?v=1';
+import { createTimedHoldProgress } from './timed-hold-progress.js?v=2';
 import { ADDITIONAL_EXERCISES } from './additional-exercises.js';
 
 const pageParameters = new URLSearchParams(window.location.search);
@@ -88,6 +88,7 @@ const platform = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ color: '#12394c', roughness: 0.95 })
 );
 platform.position.y = 0.008;
+if (exercise.id === 'standing-inner-thigh-stretch') platform.scale.x = 1.45;
 platform.receiveShadow = true;
 scene.add(platform);
 
@@ -124,7 +125,8 @@ function resizeRenderer() {
   renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height));
   camera.aspect = Math.max(0.1, rect.width / Math.max(1, rect.height));
   camera.updateProjectionMatrix();
-  cameraDistance = camera.aspect < 0.85 ? 5.3 : 4.25;
+  const baseDistance = exercise.id === 'trunk-side-bend' ? 4.75 : 4.25;
+  cameraDistance = camera.aspect < 0.85 ? baseDistance + 1.05 : baseDistance;
   positionCamera();
   draw();
 }

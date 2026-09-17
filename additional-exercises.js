@@ -82,5 +82,33 @@ export const ADDITIONAL_EXERCISES = Object.freeze({
     description: 'Extend one arm, palm up, and gently bend the wrist downward.',
     ariaLabel: 'Three-dimensional adult model demonstrating a wrist flexor stretch',
     cues: ['Extend one arm forward with the elbow straight and palm up.', 'Point the fingers toward the floor.', 'Use the other hand to gently draw the fingers toward you; hold, then switch sides.']
+  }),
+  'trunk-side-bend': Object.freeze({
+    id: 'trunk-side-bend', timed: true, title: 'Trunk Side Bend',
+    direction: 'Reach overhead and bend sideways', reverseDirection: 'Reach overhead and bend sideways',
+    description: 'Reach one arm overhead and bend sideways without twisting forward.',
+    ariaLabel: 'Three-dimensional adult model demonstrating a standing trunk side bend',
+    cues: ['Stand with your feet shoulder-width apart.', 'Raise one arm overhead and slowly bend sideways, sliding the other hand down your leg.', 'Keep your chest facing forward. Hold for 10 seconds, then switch sides.']
+  }),
+  'standing-quad-stretch': Object.freeze({
+    id: 'standing-quad-stretch', timed: true, title: 'Standing Quad Stretch',
+    direction: 'Heel toward buttock', reverseDirection: 'Heel toward buttock',
+    description: 'Bend one knee behind you and draw the heel toward the buttock.',
+    ariaLabel: 'Three-dimensional adult model demonstrating a standing quadriceps stretch',
+    cues: ['Stand near a sturdy support for balance.', 'Bend one knee behind you and hold the same-side ankle or shoe.', 'Keep your knees close and torso upright. Hold for 20 seconds, then switch sides.']
+  }),
+  'standing-inner-thigh-stretch': Object.freeze({
+    id: 'standing-inner-thigh-stretch', timed: true, title: 'Standing Inner Thigh Stretch',
+    direction: 'Shift weight to one side', reverseDirection: 'Shift weight to one side',
+    description: 'Take a wide stance and bend one knee while the other stays straight.',
+    ariaLabel: 'Three-dimensional adult model demonstrating a standing inner thigh stretch',
+    cues: ['Stand with your feet wide apart and toes facing forward.', 'Shift your weight to one side and bend that knee, keeping the other leg straight.', 'Keep the opposite foot on the floor. Hold for 20 seconds, then switch sides.']
+  }),
+  'hamstring-stretch': Object.freeze({
+    id: 'hamstring-stretch', timed: true, title: 'Hamstring Stretch',
+    direction: 'Hinge forward over the straight leg', reverseDirection: 'Hinge forward over the straight leg',
+    description: 'Place one heel in front with the knee straight and hinge forward at the hips.',
+    ariaLabel: 'Three-dimensional adult model demonstrating a standing hamstring stretch',
+    cues: ['Place one heel in front of you with that knee straight.', 'Bend the supporting knee slightly and hinge forward at the hips with a straight back.', 'Rest your hands on your thighs or hips. Hold for 20 seconds, then switch sides.']
   })
 });

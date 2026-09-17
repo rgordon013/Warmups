@@ -353,12 +353,13 @@ export function createMannequin(exerciseId = 'back-extension') {
       const restSegmentLengths = motionChains.map(chain => chain.slice(0, -1).map((bone, i) =>
         bone.getWorldPosition(new THREE.Vector3()).distanceTo(chain[i + 1].getWorldPosition(new THREE.Vector3()))
       ));
+      const restFeet = legChains.map(chain => chain.at(-1).getWorldPosition(new THREE.Vector3()));
       rig = {
         character, byName, skinnedMeshes, bones, chains: motionChains, armChains: chains, legChains,
         root, rootRestPosition: root.position.clone(), lowerSpine, midSpine, spine, neck,
         neckRestPosition: neck.position.clone(), head, rest,
         spineRestWorldQuaternion,
-        restSegmentLengths,
+        restSegmentLengths, restFeet,
         shoulderBlendVertices: {
           left: countShoulderBlendVertices(skinnedMeshes, 'L'),
           right: countShoulderBlendVertices(skinnedMeshes, 'R')
@@ -470,6 +471,47 @@ export function createMannequin(exerciseId = 'back-extension') {
       forearmForSide = side => side === SIDES[activeSide]
         ? new THREE.Vector3(-side.sign * 0.05, 0.03, 1)
         : new THREE.Vector3(-side.sign * 0.20, 0.30, 0.93);
+    } else if (exerciseId === 'trunk-side-bend') {
+      const bend = SIDES[activeSide].sign;
+      rig.lowerSpine.rotation.z = -bend * 0.10;
+      rig.midSpine.rotation.z = -bend * 0.12;
+      rig.spine.rotation.z = -bend * 0.12;
+      rig.neck.rotation.z = bend * 0.04;
+      upperForSide = side => side === SIDES[activeSide]
+        ? new THREE.Vector3(side.sign * 0.20, -0.98, 0.08)
+        : new THREE.Vector3(side.sign * 0.30, 0.95, 0.05);
+      forearmForSide = side => side === SIDES[activeSide]
+        ? new THREE.Vector3(side.sign * 0.16, -0.98, 0.08)
+        : new THREE.Vector3(-side.sign * 0.60, 0.80, 0.03);
+    } else if (exerciseId === 'standing-quad-stretch') {
+      rig.legChains[activeSide][3].rotateX(2.22);
+      upperForSide = side => side === SIDES[activeSide]
+        ? new THREE.Vector3(side.sign * 0.30, -0.93, -0.22)
+        : new THREE.Vector3(side.sign * 0.48, -0.78, 0.30);
+      forearmForSide = side => side === SIDES[activeSide]
+        ? new THREE.Vector3(side.sign * 0.08, -0.83, -0.56)
+        : new THREE.Vector3(side.sign * 0.50, -0.78, 0.20);
+    } else if (exerciseId === 'standing-inner-thigh-stretch') {
+      const bend = SIDES[activeSide].sign;
+      rig.root.position.x += bend * 0.08;
+      rig.root.position.y -= 0.11;
+      rig.legChains.forEach((leg, index) => leg[1].rotateZ(SIDES[index].sign * 0.42));
+      rig.legChains[activeSide][1].rotateX(-0.28);
+      rig.legChains[activeSide][3].rotateX(0.52);
+      rig.legChains[activeSide][3].rotateZ(-bend * 0.42);
+      rig.lowerSpine.rotation.z = -bend * 0.04;
+      rig.midSpine.rotation.z = -bend * 0.04;
+      upperForSide = side => new THREE.Vector3(side.sign * 0.56, -0.82, 0.10);
+      forearmForSide = side => new THREE.Vector3(side.sign * 0.15, -0.80, 0.60);
+    } else if (exerciseId === 'hamstring-stretch') {
+      rig.legChains[activeSide][1].rotateX(-0.31);
+      rig.legChains[1 - activeSide][1].rotateX(-0.10);
+      rig.legChains[1 - activeSide][3].rotateX(0.22);
+      rig.lowerSpine.rotation.x = 0.27;
+      rig.midSpine.rotation.x = 0.13;
+      rig.spine.rotation.x = 0.05;
+      upperForSide = side => new THREE.Vector3(side.sign * 0.27, -0.93, 0.25);
+      forearmForSide = side => new THREE.Vector3(side.sign * 0.17, -0.92, 0.35);
     } else {
       const blend = cycle < 0.35
         ? THREE.MathUtils.smoothstep(cycle / 0.35, 0, 1)
@@ -516,13 +558,18 @@ export function createMannequin(exerciseId = 'back-extension') {
     let minDistalArmTorsoClearance = Infinity;
     let maxRootRise = 0;
     let maxSpineTurn = 0;
-    pose(0);
-    const footBaseline = rig.legChains.map(chain => chain.at(-1).getWorldPosition(new THREE.Vector3()).y);
+    let maxSpineSideBend = 0;
+    let maxSpineFlexion = 0;
+    let maxFootSpread = 0;
+    let maxFootGroundError = 0;
+    const quadHandFootDistance = [Infinity, Infinity];
+    const frontFootAdvance = [0, 0];
+    const footBaseline = rig.restFeet.map(point => point.y);
     const maxFootRise = [0, 0];
     const footwearAttached = rig.legChains.every(chain => chain.at(-1).children
       .some(child => child.name.startsWith('CC0 white athletic sneaker and sock')));
     const originalSide = activeSide;
-    const sideVariants = /^(?:chin-to-chest-neck-stretch|wrist-extensor-stretch|wrist-flexor-stretch)$/.test(exerciseId)
+    const sideVariants = /^(?:chin-to-chest-neck-stretch|wrist-extensor-stretch|wrist-flexor-stretch|trunk-side-bend|standing-quad-stretch|standing-inner-thigh-stretch|hamstring-stretch)$/.test(exerciseId)
       ? [0, 1] : [activeSide];
     for (const variant of sideVariants) {
       activeSide = variant;
@@ -536,10 +583,29 @@ export function createMannequin(exerciseId = 'back-extension') {
       maxRootRise = Math.max(maxRootRise, rig.root.position.y - rig.rootRestPosition.y);
       maxSpineTurn = Math.max(maxSpineTurn,
         Math.abs(rig.lowerSpine.rotation.y) + Math.abs(rig.midSpine.rotation.y) + Math.abs(rig.spine.rotation.y));
+      maxSpineSideBend = Math.max(maxSpineSideBend,
+        Math.abs(rig.lowerSpine.rotation.z) + Math.abs(rig.midSpine.rotation.z) + Math.abs(rig.spine.rotation.z));
+      maxSpineFlexion = Math.max(maxSpineFlexion,
+        rig.lowerSpine.rotation.x + rig.midSpine.rotation.x + rig.spine.rotation.x);
       rig.legChains.forEach((chain, index) => {
         chain.at(-1).getWorldPosition(worldB);
         maxFootRise[index] = Math.max(maxFootRise[index], worldB.y - footBaseline[index]);
+        if (exerciseId === 'standing-inner-thigh-stretch')
+          maxFootGroundError = Math.max(maxFootGroundError, Math.abs(worldB.y - footBaseline[index]));
       });
+      if (exerciseId === 'standing-inner-thigh-stretch') {
+        const feet = rig.legChains.map(chain => chain.at(-1).getWorldPosition(new THREE.Vector3()));
+        maxFootSpread = Math.max(maxFootSpread, Math.abs(feet[0].x - feet[1].x));
+      }
+      if (exerciseId === 'standing-quad-stretch') {
+        rig.armChains[variant].at(-1).getWorldPosition(worldA);
+        rig.legChains[variant].at(-1).getWorldPosition(worldB);
+        quadHandFootDistance[variant] = Math.min(quadHandFootDistance[variant], worldA.distanceTo(worldB));
+      }
+      if (exerciseId === 'hamstring-stretch') {
+        rig.legChains[variant].at(-1).getWorldPosition(worldB);
+        frontFootAdvance[variant] = Math.max(frontFootAdvance[variant], worldB.z - rig.restFeet[variant].z);
+      }
       rig.chains.forEach((chain, chainIndex) => {
         chain.slice(0, -1).forEach((bone, segmentIndex) => {
           bone.getWorldPosition(worldA);
@@ -549,14 +615,16 @@ export function createMannequin(exerciseId = 'back-extension') {
         });
       });
       rig.midSpine.getWorldPosition(worldA);
+      const torsoClearance = point => Math.hypot(point.x - worldA.x, point.z - worldA.z,
+        Math.max(0, 0.85 - point.y, point.y - 1.53));
       rig.armChains.forEach(chain => {
         chain.at(-1).getWorldPosition(worldB);
         minWristTorsoClearance = Math.min(minWristTorsoClearance,
-          Math.hypot(worldB.x - worldA.x, worldB.z - worldA.z));
+          torsoClearance(worldB));
         chain.slice(3).forEach(bone => {
           bone.getWorldPosition(worldB);
           minDistalArmTorsoClearance = Math.min(minDistalArmTorsoClearance,
-            Math.hypot(worldB.x - worldA.x, worldB.z - worldA.z));
+            torsoClearance(worldB));
         });
       });
       }
@@ -577,6 +645,14 @@ export function createMannequin(exerciseId = 'back-extension') {
         ? maxRootRise > 0.05
         : exerciseId === 'standing-trunk-rotation'
           ? maxSpineTurn > 0.50
+          : exerciseId === 'trunk-side-bend'
+            ? maxSpineSideBend > 0.30
+            : exerciseId === 'standing-quad-stretch'
+              ? maxFootRise.every(value => value > 0.55) && quadHandFootDistance.every(value => value < 0.24)
+              : exerciseId === 'standing-inner-thigh-stretch'
+                ? maxFootSpread > 0.85 && maxFootGroundError < 0.07
+                : exerciseId === 'hamstring-stretch'
+                  ? maxSpineFlexion > 0.40 && frontFootAdvance.every(value => value > 0.20)
           : true;
     return {
       ready: true,
@@ -596,7 +672,8 @@ export function createMannequin(exerciseId = 'back-extension') {
       minDistalArmTorsoClearance,
       distalArmTorsoClearancePass: minDistalArmTorsoClearance > 0.10,
       exerciseId,
-      exerciseMotion: { maxRootRise, maxSpineTurn, maxFootRise },
+      exerciseMotion: { maxRootRise, maxSpineTurn, maxSpineSideBend, maxSpineFlexion,
+        maxFootRise, maxFootSpread, maxFootGroundError, quadHandFootDistance, frontFootAdvance },
       exerciseMotionPass,
       pass: left > 0 && right > 0 && footwearAttached && nonFiniteBoneValues === 0 &&
         maxSegmentLengthError < 1e-5 && maxLoopError < 1e-8 &&

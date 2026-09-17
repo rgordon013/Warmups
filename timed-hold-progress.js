@@ -1,4 +1,4 @@
-import { bindSettingsControls, formatTarget } from './exercise-settings.js?v=3';
+import { bindSettingsControls, formatTarget } from './exercise-settings.js?v=4';
 
 export function createTimedHoldProgress({ exerciseId, app, count, progressLabel, status, announcement,
   toggle, resetButton, repsSelect, setsSelect, onSideChange, onRunningChange }) {

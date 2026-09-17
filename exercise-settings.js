@@ -12,7 +12,11 @@ export const EXERCISE_DEFAULTS = Object.freeze({
   'neck-retraction': Object.freeze({ reps: 10, sets: 2 }),
   'chin-to-chest-neck-stretch': Object.freeze({ reps: 20, sets: 2 }),
   'wrist-extensor-stretch': Object.freeze({ reps: 20, sets: 2 }),
-  'wrist-flexor-stretch': Object.freeze({ reps: 20, sets: 2 })
+  'wrist-flexor-stretch': Object.freeze({ reps: 20, sets: 2 }),
+  'trunk-side-bend': Object.freeze({ reps: 10, sets: 2 }),
+  'standing-quad-stretch': Object.freeze({ reps: 20, sets: 2 }),
+  'standing-inner-thigh-stretch': Object.freeze({ reps: 20, sets: 2 }),
+  'hamstring-stretch': Object.freeze({ reps: 20, sets: 2 })
 });
 
 const LIMITS = Object.freeze({ reps: [1, 50], sets: [1, 10] });
@@ -66,7 +70,8 @@ function populateSelect(select, [minimum, maximum]) {
 export function formatTarget(settings, exerciseId) {
   const repWord = settings.reps === 1 ? 'rep' : 'reps';
   const setWord = settings.sets === 1 ? 'set' : 'sets';
-  if (['chin-to-chest-neck-stretch', 'wrist-extensor-stretch', 'wrist-flexor-stretch'].includes(exerciseId)) {
+  if (['chin-to-chest-neck-stretch', 'wrist-extensor-stretch', 'wrist-flexor-stretch',
+    'trunk-side-bend', 'standing-quad-stretch', 'standing-inner-thigh-stretch', 'hamstring-stretch'].includes(exerciseId)) {
     return `${settings.reps}-second hold · ${settings.sets} ${setWord} per side`;
   }
   return `${settings.reps} ${repWord} · ${settings.sets} ${setWord}`;

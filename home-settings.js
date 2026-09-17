@@ -1,4 +1,4 @@
-import { bindSettingsControls, formatTarget } from './exercise-settings.js?v=3';
+import { bindSettingsControls, formatTarget } from './exercise-settings.js?v=4';
 
 document.querySelectorAll('[data-exercise-id]').forEach(card => {
   const exerciseId = card.dataset.exerciseId;
